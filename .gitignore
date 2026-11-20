@@ -189,3 +189,17 @@ test/data/*.json
 test/data/pipeline/*.json
 test/data/filters/*.json
 test/data/plang/*.json
+
+# ---- terrain viewer (terrain/pdal-pipeline.py): keep private data out of the public repo ----
+local-output/
+terrain/local-output/
+terrain/.work/
+data/private/
+*.las
+*.laz
+*.zip
+*.tif
+*.tiff
+*.img
+*.adf
+*.asc
