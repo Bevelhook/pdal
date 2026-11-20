@@ -1,0 +1,14 @@
+# conda env create -f environment.yml && conda activate terrain
+name: terrain
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pdal
+  - python-pdal
+  - gdal
+  - numpy
+  - pyproj
+  - pillow
+  - whitebox      # WhiteboxTools; downloads its small engine binary on first use
+  - git

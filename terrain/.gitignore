@@ -1,0 +1,17 @@
+# Real or private data never leaves this computer
+local-output/
+.work/
+data/private/
+*.las
+*.laz
+*.zip
+*.tif
+*.tiff
+*.img
+*.adf
+*.asc
+*.shp
+*.shx
+*.dbf
+*.prj
+__pycache__/
