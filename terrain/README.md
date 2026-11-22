@@ -1,6 +1,6 @@
 # Terrain field map: LiDAR to a phone map in one command
 
-`pdal-pipeline.py` turns LiDAR into a terrain map you can use in the field on an iPhone. You can give it a DOGAMI tile zip, a LAS/LAZ file, a DEM, or a spot to download. The map shows elevation, slope, contours, streams and a watershed. It also measures distance, area, elevation profiles and State Plane coordinates, and it works offline.
+`pdal-pipeline.py` turns LiDAR into a terrain map you can use in the field on an iPhone. You can give it a DOGAMI tile zip, a LAS/LAZ file, a DEM, or a spot to download. The map shows elevation, slope, contours, streams and a watershed. It also measures distance, area, elevation profiles and State Plane coordinates, and it works offline. A built-in **PNW landowner field guide** (toxic plant and mushroom ID key, invasive removal, a local-only field journal and walk mode) shares the app: journal finds show up on the map as colour-coded pins.
 
 Live demo (public sample only, Molalla River State Park): https://bevelhook.github.io/pdal/
 
@@ -20,7 +20,7 @@ Live demo (public sample only, Molalla River State Park): https://bevelhook.gith
 Guardrails built into `--publish`:
 - It refuses any input that is not the built-in sample (`molalla-river-sp-2019-v1`) unless you add `--i-understand-this-is-public` and type the dataset name.
 - It can't be combined with `--local` or `--out`.
-- Before committing, it scans the staged files and aborts if it finds any LAS/LAZ/zip, any raster or image file, any `local-output/` path, or any GeoJSON or `data.js` with coordinates outside the sample area. It also aborts if `git ls-files` contains a point cloud that is not part of upstream PDAL's own `test/` data.
+- Before committing, it scans the staged files and aborts if it finds any LAS/LAZ/zip, any raster or image file, any `local-output/` path, or any GeoJSON or `data.js` with coordinates outside the sample area, and any field-journal export (by name or by its `"app":"pnw-field-guide"` header). It also aborts if `git ls-files` contains a point cloud that is not part of upstream PDAL's own `test/` data.
 - `.gitignore` covers `local-output/`, `.work/`, `data/private/`, `*.las`, `*.laz`, `*.zip` and raster formats.
 
 **Credentials:** the script never reads, stores, prints or embeds a token. `--publish` just runs `git push`, so it uses whatever login git already has on your computer (GitHub Desktop, the git credential helper, or an SSH key). You don't need a personal access token. If you ever make one for git, make it a fine-grained token limited to `Bevelhook/pdal` with *Contents: read and write* only.
@@ -71,6 +71,7 @@ python pdal-pipeline.py --publish                    # PUBLIC: refresh the demo 
 | `--local` | Local only. This is already the default |
 | `--serve` / `--lan` / `--port` | Preview on 127.0.0.1, or on your Wi-Fi with `--lan` (port 8000) |
 | `--skip-build` | Reuse the last build (with `--serve` or `--publish`) |
+| `--refresh-site` | No PDAL/GDAL: re-wrap the existing `data.js` with the current `app.js`, field guide and page template (after a code or `plants.data.js` update) |
 | `--publish` | PUBLIC demo refresh: commit and push the site, then wait for the live URL to show the new build |
 | `--site-url URL`, `--remote`, `--branch` | Publish target overrides (origin, gh-pages) |
 
@@ -101,8 +102,20 @@ python pdal-pipeline.py --publish                    # PUBLIC: refresh the demo 
 - **GPS:** shows where you're standing and reads the terrain at that spot. It needs the https link or 127.0.0.1.
 - **Measure:** tap points for distance (ft, mi, m), area (sq ft, acres), or an elevation **profile** chart. The profile shows min, max, gain and loss, plus average and steepest grade.
 - **Export:** GeoJSON of everything you measured (lengths, areas and profile stats included), and a PNG of the current map.
-- **Offline:** after one visit, the page, libraries and data are cached, and so are the map tiles you've looked at (up to 1,500; no bulk downloading, per OpenStreetMap's tile policy). Use *Share > Add to Home Screen* to get an app icon.
+- **Offline:** after one visit, the page, libraries, terrain data and the field guide (with `plants.data.js`) are cached, and so are the map tiles you've looked at (up to 1,500; no bulk downloading, per OpenStreetMap's tile policy). Use *Share > Add to Home Screen* to get an app icon.
 - **SUN / DARK:** a high-contrast bright theme for direct sunlight. Every button is at least 56 px.
+
+## Field guide (GUIDE button)
+
+The top bar's **GUIDE** button opens the field guide over the map; its **Map** tab brings the map back. Links like `index.html#toxic` open a guide section directly.
+
+- **Tabs:** This month (date-reactive dashboard), Toxic ID key (lookalike comparisons, poison hemlock protocol, toxic species cards with confidence flags and citations), Invasive removal (incl. the garlic mustard deep dive), Natives, Calendar, Journal, Fact-check.
+- **Log a find from the map:** long-press anywhere on the map (right-click on a computer), or tap a spot and press **+ Log a find here** in the Point panel. The journal opens with lat/long, elevation and slope from the terrain already filled in. Save, and you are back on the map with the new pin dropping in and a confirmation.
+- **Pins:** toxic = restrained red, invasive = muted clay, native = cool silver, other = olive grey. Tap a pin to see the entry (photo, date, coordinates, elevation/slope, notes; toxic finds also show the toxicity note). **Edit in journal** and **Guide card** are one tap away. While a Measure tool is active, tapping a pin adds a measure point instead.
+- **Walk mode:** big buttons, camera capture, typo-tolerant search and a live GPS fix with elevation and slope. **Show map** shows where you are and your pins; **Back to walk** returns without losing what you typed. Saving drops a pin at your position.
+- **Private by design:** journal entries, pins and photos live only in this browser's IndexedDB (`pnw-field-guide`) on this device. They are never uploaded, synced, put in `data.js`, or published with the map, and `--publish` refuses journal exports. Use Journal > Export to back them up (and Import to restore or move them to another browser).
+- **Data:** `terrain/web/plants.data.js` is the separately versioned plant data (`dataVersion` inside; 30 species, lookalike comparisons, protocols, sources). Edit it, then rebuild with `--refresh-site` (or a normal build) so the cache picks it up.
+- Identification and safety reference only, not an edibility or medical guide. Suspected poisoning: Oregon Poison Center 1-800-222-1222, emergency 911.
 
 ## Limits, honestly
 
@@ -119,6 +132,8 @@ index.html  data.js  sw.js  manifest.webmanifest  icon.svg  .nojekyll   <- the p
 terrain/pdal-pipeline.py   the one entry point
 terrain/web/app.js         viewer logic
 terrain/web/vendor.js      Leaflet 1.9.4 + proj4js 2.12.1, self-hosted so the viewer works offline
+terrain/web/guide.js       field guide: toxic ID key, invasives, dashboard, journal, walk mode, map pins
+terrain/web/plants.data.js field-guide plant data (window.FIELD_GUIDE_DATA, versioned separately)
 terrain/environment.yml    conda environment
 terrain/local-output/      your local builds (gitignored, never published)
 ```

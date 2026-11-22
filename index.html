@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="terrain-build" content="02f23fcf8627">
+<meta name="terrain-build" content="af6507caa12e">
 <meta name="theme-color" content="#0b0b0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -66,21 +66,27 @@ canvas#prof{width:100%;height:170px;background:var(--panel2);border-radius:8px}
 </head>
 <body>
 <div id="map" aria-label="map"></div>
-<div id="top"><div id="title">Molalla River State Park (public sample)<small id="sub"></small></div><div id="net" class="on" role="status">ONLINE</div><button id="themeBtn" aria-label="bright mode">SUN</button></div>
+<div id="top"><div id="title">Molalla River State Park (public sample)<small id="sub"></small></div><div id="net" class="on" role="status">ONLINE</div><button id="themeBtn" aria-label="bright mode">SUN</button><button id="guideBtn" aria-label="field guide" aria-pressed="false">GUIDE</button></div>
 <div id="hint"></div>
 <div class="sheet" id="layersSheet"><h3>Layers</h3><div id="layerBtns" class="row"></div>
 <div>Overlay opacity</div><input type="range" id="opacity" min="10" max="100" value="85" aria-label="overlay opacity">
 <div id="legend"></div><div class="foot" id="srcNote"></div></div>
 <div class="sheet" id="infoSheet"><h3>Point readout</h3><div id="info">Tap the map to read elevation, slope and coordinates.</div>
-<div class="row"><button id="zoneN" class="on">State Plane NORTH</button><button id="zoneS">State Plane SOUTH</button></div></div>
+<div class="row"><button id="zoneN" class="on">State Plane NORTH</button><button id="zoneS">State Plane SOUTH</button></div>
+<div class="row"><button id="logHere">+ Log a find here</button></div><div class="foot">Or long-press anywhere on the map to log a find there.</div></div>
 <div class="sheet" id="measureSheet"><h3 id="mTitle">Measure</h3><div class="row"><button id="mDist">Distance</button><button id="mArea">Area</button><button id="mProf">Profile</button></div>
 <div id="mOut">Pick a tool, then tap points on the map.</div><canvas id="prof" style="display:none"></canvas>
 <div class="row"><button id="mUndo">Undo</button><button id="mDone">Finish</button><button id="mClear">Clear all</button></div></div>
 <div class="sheet" id="exportSheet"><h3>Export</h3><div class="row"><button id="exGeo">GeoJSON of measurements</button><button id="exPng">PNG of map</button></div><div id="exOut" class="foot"></div>
 <div class="foot" id="aboutNote"></div></div>
+<div class="sheet" id="findSheet"><h3>Find</h3><div id="findBody"></div>
+<div class="row"><button id="findEdit">Edit in journal</button><button id="findGuide">Guide card</button></div>
+<div class="foot">Journal finds are stored only on this device and are never published with the map.</div></div>
 <nav id="bar"><button data-sheet="layersSheet"><b>L</b>Layers</button><button data-sheet="infoSheet" id="infoTab"><b>i</b>Point</button><button data-sheet="measureSheet"><b>M</b>Measure</button><button id="fitBtn"><b>F</b>Fit</button><button id="gpsBtn"><b>G</b>GPS</button><button data-sheet="exportSheet"><b>E</b>Export</button></nav>
-<script src="terrain/web/vendor.js?v=02f23fcf8627"></script>
-<script src="data.js?v=02f23fcf8627"></script>
-<script src="terrain/web/app.js?v=02f23fcf8627"></script>
+<script src="terrain/web/vendor.js?v=af6507caa12e"></script>
+<script src="data.js?v=af6507caa12e"></script>
+<script src="terrain/web/app.js?v=af6507caa12e"></script>
+<script src="terrain/web/plants.data.js?v=af6507caa12e"></script>
+<script src="terrain/web/guide.js?v=af6507caa12e"></script>
 </body>
 </html>
