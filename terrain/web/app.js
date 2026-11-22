@@ -461,7 +461,9 @@
     // A new build took over (sw.js changed): reload once so the phone runs it, unless work would be lost.
     navigator.serviceWorker.addEventListener("controllerchange", function () {
       if (!hadController || reloading) { hadController = true; return; }
-      if (tool || pts.length || features.length) { hint("App updated. Export your measurements, then reload to use the new version."); return; }
+      if (tool || pts.length || features.length || (window.FieldGuide && FieldGuide.busy && FieldGuide.busy())) {
+        hint("App updated. Save your work (measurements or the find you are logging), then reload to use the new version."); return;
+      }
       reloading = true; location.reload();
     });
   } else if (location.protocol === "file:") { window.__sw = "skipped (file://)"; }
