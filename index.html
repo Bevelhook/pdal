@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="terrain-build" content="ca9d727afa64">
+<meta name="terrain-build" content="02f23fcf8627">
 <meta name="theme-color" content="#0b0b0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -14,11 +14,11 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACkUlEQVR42u3cQXLiQAxAUaNiZ+f+J8gJ4wNwgYRUHLctqd/fD4HuNxIDqXms67ZI3xWOQHAIDsEhOASH4BAcgkNwCA4JDsEhOASH4BAcgkNwCA7BIcEhOASH4BAcgkNwCA7BITgkOASH4BAcgkNwCA7BITgEh+CQ4BAcgkNwCA7BITgEh+AQHBIcgkNwvGn/3F0zHD/K4AMOwXFooRgecHirAQcucJzugI/ZcRAABzpwDLh7PkwOwXFoJBgec+Fw33DABMclN81Hfxwl7rgixNn/tXLNnRX9zYFwu6PvrO7yCn/vPWFr5Z47K/2eN9zoxc+wEJcgo8oDwtEE3PuHquImjA0voQ+Oocd6yoO3+eDVWjn5ajt9MxzGhn1ncmT8Gi85pjA2VB7HxTL++uMOP73M4q2V+99apvURxoZlVxjHjaf/648+67nlFGateBdcFsc8CyXhKw0y2n/zbq10UJsNXBgbqf6ToFSvOsjwztRaKUMkj8IwNgyPMjh8u5bnEKwVFcFhbKQ6CpODjwo4jA1rhYwyx2KtKDcOYyPn4QQZslYMj2o4jI3MBxVkyFoxPOrgMDZMDjIKn5u1okw4jI0qpxdk8GGtKDcOY6PWSZocSoDD2Ch3nkGGrBXDIyUOY6Po2QYZslYMj2Q4jA2Tg4yew8Na0eU4jI0GwyPI4MNaUQIcxkab4RFkyFoxPG7FYWyYHJpleISxwcdYHGRYK5preISxoVE4yGg8PKwVjcFhbPQeHo913ZygrBXBITgEh+AQHIJDHXr+5w/v+5cTzN+2fZgcslYEh27PdysyOQSH4BAcgkOLT0i1+IRU1org0OITUsnkEByCQ3AIDsEhOASH4BAcEhyCQ3AIDsEhOJS5Fw/Rb6k/WDlEAAAAAElFTkSuQmCC">
 <style>
-:root{--bg:#0b0b0c;--panel:#141416;--panel2:#1d1d21;--fg:#fff;--muted:#c9c9cf;--accent:#ffb000;--accent-fg:#000;--line:#3a3a40;--ok:#35d07f;--bad:#ff5a5a}
+:root{--vvb:0px;--bar:calc(72px + env(safe-area-inset-bottom) + var(--vvb));--top:calc(72px + env(safe-area-inset-top));--bg:#0b0b0c;--panel:#141416;--panel2:#1d1d21;--fg:#fff;--muted:#c9c9cf;--accent:#ffb000;--accent-fg:#000;--line:#3a3a40;--ok:#35d07f;--bad:#ff5a5a}
 body.bright{--bg:#fff;--panel:#fff;--panel2:#f0f0f0;--fg:#000;--muted:#222;--accent:#0047ff;--accent-fg:#fff;--line:#000;--ok:#006b2d;--bad:#b00000}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:16px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-#map{position:fixed;inset:0;bottom:calc(72px + env(safe-area-inset-bottom));background:#222}
+#map{position:fixed;inset:0;bottom:var(--bar);background:#222}
 body.bright #map{background:#ddd}
 #top{position:fixed;top:0;left:0;right:0;padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 6px calc(8px + env(safe-area-inset-left));display:flex;gap:8px;align-items:center;z-index:1000;pointer-events:none}
 #top>*{pointer-events:auto}
@@ -29,12 +29,23 @@ body.bright #map{background:#ddd}
 button,.btn{min-width:56px;min-height:56px;border-radius:12px;border:2px solid var(--line);background:var(--panel2);color:var(--fg);font:600 15px/1.1 inherit;padding:6px 10px;cursor:pointer;touch-action:manipulation}
 button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 button:active{transform:scale(.97)}
-#bar{position:fixed;left:0;right:0;bottom:0;height:calc(72px + env(safe-area-inset-bottom));padding:8px calc(6px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));background:var(--panel);border-top:2px solid var(--line);display:flex;gap:6px;z-index:1001;overflow-x:auto}
+#bar{position:fixed;left:0;right:0;bottom:var(--vvb);height:calc(72px + env(safe-area-inset-bottom));padding:8px calc(6px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));background:var(--panel);border-top:2px solid var(--line);display:flex;gap:6px;z-index:1001;overflow-x:auto}
 #bar button{flex:1 0 56px;font-size:13px;padding:4px}
 #bar button b{display:block;font-size:20px;line-height:1}
-.sheet{position:fixed;left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));bottom:calc(80px + env(safe-area-inset-bottom));max-height:58vh;overflow:auto;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:10px;z-index:1002;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
-.sheet.open{display:block}
+/* panels: always above the bottom toolbar, never taller than the space between the top bar and the toolbar,
+   own scroll area, header with title (tap = minimize), minimize and close (built by app.js for every .sheet) */
+.sheet{position:fixed;left:calc(6px + env(safe-area-inset-left));right:calc(6px + env(safe-area-inset-right));bottom:calc(var(--bar) + 8px);max-height:min(60vh,calc(100vh - var(--bar) - var(--top) - 16px));max-height:min(60dvh,calc(100dvh - var(--bar) - var(--top) - 16px));overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:0;z-index:1000;display:none;flex-direction:column;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.sheet.open{display:flex}
 .sheet h3{margin:2px 0 8px;font-size:17px}
+.sh-head{display:flex;align-items:center;gap:6px;padding:4px;flex:none;border-bottom:2px solid var(--line)}
+.sh-head button{flex:none;width:56px;font-size:22px;padding:0}
+.sh-head .sh-title{flex:1;width:auto;min-width:0;text-align:left;font-size:17px;font-weight:700;background:transparent;border-color:transparent;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-sum{font-weight:600;color:var(--accent);font-size:15px}
+.sh-body{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 10px 10px;min-height:0;flex:1 1 auto}
+.sheet.min{left:auto;max-width:calc(100% - 12px - env(safe-area-inset-left) - env(safe-area-inset-right))}
+.sheet.min .sh-head{border-bottom:0}
+.sheet.min .sh-body{display:none}
+.sheet:not(.min) .sh-sum{display:none}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
 .row>button{flex:1}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
@@ -45,7 +56,7 @@ button:active{transform:scale(.97)}
 .sw{display:inline-block;width:22px;height:4px;vertical-align:middle;margin-right:6px}
 input[type=range]{width:100%;height:56px;accent-color:var(--accent)}
 canvas#prof{width:100%;height:170px;background:var(--panel2);border-radius:8px}
-#hint{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top));background:var(--accent);color:var(--accent-fg);padding:8px 14px;border-radius:12px;font-weight:700;z-index:1003;display:none;max-width:92vw;text-align:center}
+#hint{cursor:pointer;position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top));background:var(--accent);color:var(--accent-fg);padding:8px 14px;border-radius:12px;font-weight:700;z-index:1003;display:none;max-width:92vw;text-align:center}
 .foot{font-size:12px;color:var(--muted);margin-top:8px}
 .leaflet-container{font:inherit}
 .leaflet-control-attribution{font-size:11px}
@@ -68,8 +79,8 @@ canvas#prof{width:100%;height:170px;background:var(--panel2);border-radius:8px}
 <div class="sheet" id="exportSheet"><h3>Export</h3><div class="row"><button id="exGeo">GeoJSON of measurements</button><button id="exPng">PNG of map</button></div><div id="exOut" class="foot"></div>
 <div class="foot" id="aboutNote"></div></div>
 <nav id="bar"><button data-sheet="layersSheet"><b>L</b>Layers</button><button data-sheet="infoSheet" id="infoTab"><b>i</b>Point</button><button data-sheet="measureSheet"><b>M</b>Measure</button><button id="fitBtn"><b>F</b>Fit</button><button id="gpsBtn"><b>G</b>GPS</button><button data-sheet="exportSheet"><b>E</b>Export</button></nav>
-<script src="terrain/web/vendor.js?v=ca9d727afa64"></script>
-<script src="data.js?v=ca9d727afa64"></script>
-<script src="terrain/web/app.js?v=ca9d727afa64"></script>
+<script src="terrain/web/vendor.js?v=02f23fcf8627"></script>
+<script src="data.js?v=02f23fcf8627"></script>
+<script src="terrain/web/app.js?v=02f23fcf8627"></script>
 </body>
 </html>

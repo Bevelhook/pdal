@@ -144,16 +144,73 @@
   $("srcNote").textContent = srcTxt; $("aboutNote").textContent = srcTxt;
 
   // ---------------------------------------------------------------- sheets / toolbar
-  var openSheet = null;
-  function show(id) {
-    document.querySelectorAll(".sheet").forEach(function (s) { s.classList.toggle("open", s.id === id && openSheet !== id); });
-    openSheet = openSheet === id ? null : id;
-    document.querySelectorAll("#bar button[data-sheet]").forEach(function (b) { b.classList.toggle("on", b.dataset.sheet === openSheet); });
-    if (openSheet !== "measureSheet" && tool) finish();
+  // Every .sheet gets a header with a title (tap = minimize/expand), a minimize button and a close button,
+  // built here from its first <h3>, so any panel added to the template later gets the same controls.
+  var openSheet = null, infoPrefMin = false;
+  var SHEETS = Array.prototype.slice.call(document.querySelectorAll(".sheet"));
+  SHEETS.forEach(function (s) {
+    var h = s.querySelector("h3"), title = h ? h.textContent : s.id;
+    var body = document.createElement("div"); body.className = "sh-body";
+    while (s.firstChild) body.appendChild(s.firstChild);
+    if (h) h.remove();
+    var head = document.createElement("div"); head.className = "sh-head";
+    head.innerHTML = '<button class="sh-title" type="button" aria-expanded="true"><span class="sh-name"></span><span class="sh-sum"></span></button>' +
+      '<button class="sh-min" type="button" aria-label="Minimize panel" title="Minimize">\u25be</button>' +
+      '<button class="sh-x" type="button" aria-label="Close panel" title="Close (Esc)">\u2715</button>';
+    head.querySelector(".sh-name").textContent = title;
+    s.appendChild(head); s.appendChild(body);
+    s.setAttribute("role", "dialog"); s.setAttribute("aria-label", title);
+    head.querySelector(".sh-title").onclick = function () { setMin(s.id, !s.classList.contains("min")); };
+    head.querySelector(".sh-min").onclick = function () { setMin(s.id, !s.classList.contains("min")); };
+    head.querySelector(".sh-x").onclick = function () { closeSheet(); };
+  });
+  function sheetSummary(id, txt) { var e = document.querySelector("#" + id + " .sh-sum"); if (e) e.textContent = txt ? "  " + txt : ""; }
+  function syncBar() {
+    document.querySelectorAll("#bar button[data-sheet]").forEach(function (b) {
+      var on = b.dataset.sheet === openSheet; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+  function setMin(id, min) {
+    var s = $(id); if (!s) return;
+    s.classList.toggle("min", !!min);
+    s.querySelector(".sh-title").setAttribute("aria-expanded", min ? "false" : "true");
+    var m = s.querySelector(".sh-min"); m.innerHTML = min ? "\u25b4" : "\u25be";
+    m.setAttribute("aria-label", min ? "Expand panel" : "Minimize panel"); m.title = min ? "Expand" : "Minimize";
+    if (id === "infoSheet") infoPrefMin = !!min;
+    if (!min && id === "measureSheet" && $("prof").style.display === "block" && lastProfile) drawProfile(lastProfile);
+  }
+  function openSheetId(id, min) {
+    // leaving the measure panel for another panel ends the active tool (a finished shape is kept)
+    if (openSheet === "measureSheet" && id !== "measureSheet" && tool) finish();
+    openSheet = id;
+    SHEETS.forEach(function (s) { s.classList.toggle("open", s.id === id); });
+    if (id) setMin(id, !!min);
+    syncBar();
+  }
+  function closeSheet() { openSheetId(null); }
+  function show(id) {             // bottom-bar tab: open; tap again to close (or to expand if it was minimized)
+    if (openSheet === id) { if ($(id).classList.contains("min")) setMin(id, false); else closeSheet(); }
+    else openSheetId(id);
   }
   document.querySelectorAll("#bar button[data-sheet]").forEach(function (b) { b.onclick = function () { show(b.dataset.sheet); }; });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" && e.key !== "Esc") return;
+    if (openSheet) { e.preventDefault(); closeSheet(); }
+    else if (tool) { e.preventDefault(); finish(); }
+  });
   $("fitBtn").onclick = function () { map.fitBounds(bounds); };
   function hint(t) { var h = $("hint"); h.textContent = t || ""; h.style.display = t ? "block" : "none"; }
+  $("hint").onclick = function () { hint(); };   // tap the banner to dismiss it
+
+  // iPhone Safari: keep the toolbar above browser chrome that overlays the page bottom (visual viewport shorter
+  // than the layout viewport). Zero on desktop and when Safari reports no overlap.
+  function vvFix() {
+    var vv = window.visualViewport, gap = 0;
+    if (vv && Math.abs((vv.scale || 1) - 1) < 0.01) gap = Math.max(0, Math.min(160, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    document.documentElement.style.setProperty("--vvb", gap + "px");
+  }
+  if (window.visualViewport) { visualViewport.addEventListener("resize", vvFix); visualViewport.addEventListener("scroll", vvFix); }
+  window.addEventListener("resize", vvFix); vvFix();
 
   // ---------------------------------------------------------------- tap readout
   var tapMarker = null;
@@ -170,6 +227,7 @@
     if (tapMarker) map.removeLayer(tapMarker);
     tapMarker = L.circleMarker([lat, lng], { radius: 9, color: "#000", weight: 3, fillColor: accent(), fillOpacity: 1 }).addTo(map);
     last = { lat: lat, lng: lng, label: label };
+    sheetSummary("infoSheet", (isNaN(z) ? "no data" : z.toFixed(0) + " ft") + (isNaN(s) ? "" : ", " + s.toFixed(0) + "\u00b0"));
     return { elev_ft: z, slope_deg: s, e: sp.e, n: sp.n, code: sp.code };
   }
   var last = null;
@@ -193,7 +251,7 @@
       gpsLayer = L.layerGroup([L.circle(ll, { radius: p.coords.accuracy, color: "#00b7ff", weight: 1, fillOpacity: 0.1 }),
         L.circleMarker(ll, { radius: 8, color: "#fff", weight: 3, fillColor: "#00b7ff", fillOpacity: 1 })]).addTo(map);
       map.setView(ll, Math.max(map.getZoom(), 17));
-      if (openSheet !== "infoSheet") show("infoSheet");
+      if (openSheet !== "infoSheet") openSheetId("infoSheet", infoPrefMin);
       readout(ll[0], ll[1], "GPS (\u00b1" + Math.round(p.coords.accuracy * FT) + " ft)");
     }, function (e) { hint("GPS unavailable: " + e.message); setTimeout(hint, 4000); }, { enableHighAccuracy: true, timeout: 20000 });
   };
@@ -201,11 +259,14 @@
   // ---------------------------------------------------------------- measuring
   var tool = null, pts = [], temp = L.layerGroup().addTo(map), saved = L.layerGroup().addTo(map), features = [];
   function setTool(t) {
+    if (t && t === tool) { finish(); return; }   // tapping the active tool again turns it off (keeps a finished shape)
     if (tool) finish();
     tool = t; pts = [];
     ["mDist", "mArea", "mProf"].forEach(function (id) { $(id).classList.toggle("on", ("m" + { dist: "Dist", area: "Area", prof: "Prof" }[t]) === id); });
     hint(t ? { dist: "Tap points for distance, then Finish", area: "Tap corners for area, then Finish", prof: "Tap points along the profile line, then Finish" }[t] : "");
     if (t !== "prof") $("prof").style.display = "none";
+    ["mDist", "mArea", "mProf"].forEach(function (id) { $(id).setAttribute("aria-pressed", $(id).classList.contains("on") ? "true" : "false"); });
+    sheetSummary("measureSheet", t ? shortText() : "");
   }
   $("mDist").onclick = function () { setTool("dist"); };
   $("mArea").onclick = function () { setTool("area"); };
@@ -215,7 +276,13 @@
     var col = accent();
     if (pts.length > 1) (tool === "area" ? L.polygon(pts, { color: col, weight: 4, fillOpacity: 0.15 }) : L.polyline(pts, { color: col, weight: 4 })).addTo(temp);
     pts.forEach(function (p) { L.circleMarker(p, { radius: 7, color: "#000", weight: 2, fillColor: col, fillOpacity: 1 }).addTo(temp); });
-    $("mOut").innerHTML = liveText();
+    $("mOut").innerHTML = liveText(); sheetSummary("measureSheet", shortText());
+  }
+  function shortText() {
+    if (!tool) return "";
+    var nm = { dist: "Distance", area: "Area", prof: "Profile" }[tool];
+    if (tool === "area") return nm + " " + (pts.length > 2 ? fmtArea(areaM2(pts)).split("  |")[0] : "") + " (" + pts.length + " pts)";
+    return nm + " " + (pts.length > 1 ? fmtLen(lengthM(pts)).split("  |")[0] : "") + " (" + pts.length + " pts)";
   }
   function liveText() {
     if (!tool) return "Pick a tool, then tap points on the map.";
@@ -224,7 +291,7 @@
   }
   function addPoint(ll) { pts.push(L.latLng(ll.lat, ll.lng)); redrawTemp(); }
   $("mUndo").onclick = function () { pts.pop(); redrawTemp(); };
-  $("mClear").onclick = function () { pts = []; features = []; saved.clearLayers(); temp.clearLayers(); $("prof").style.display = "none"; $("mOut").innerHTML = liveText(); };
+  $("mClear").onclick = function () { lastProfile = null; sheetSummary("measureSheet", ""); pts = []; features = []; saved.clearLayers(); temp.clearLayers(); $("prof").style.display = "none"; $("mOut").innerHTML = liveText(); };
   $("mDone").onclick = function () { finish(); };
   function profile(p, n) {
     n = n || 240;
@@ -251,8 +318,9 @@
       avg_grade_pct: +((v[v.length - 1].z - v[0].z) / (v[v.length - 1].d_ft - v[0].d_ft) * 100).toFixed(2), max_grade_pct: +(maxg * 100).toFixed(1) };
     return { samples: out, stats: st };
   }
+  var lastProfile = null;
   function drawProfile(pr) {
-    var cv = $("prof"); cv.style.display = "block";
+    var cv = $("prof"); cv.style.display = "block"; lastProfile = pr;
     var dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr;
     var g = cv.getContext("2d"); g.scale(dpr, dpr);
@@ -296,14 +364,20 @@
         feat = { type: "Feature", properties: props, geometry: { type: "LineString", coordinates: coords } };
       }
       features.push(feat);
+      sheetSummary("measureSheet", "saved " + features.length);
+    } else {
+      $("mOut").innerHTML = pts.length ? "Not enough points for " + props0(t) + " (needs " + need + "); nothing saved." : liveText0();
+      sheetSummary("measureSheet", "");
     }
     tool = null; pts = []; temp.clearLayers(); hint("");
-    ["mDist", "mArea", "mProf"].forEach(function (id) { $(id).classList.remove("on"); });
+    ["mDist", "mArea", "mProf"].forEach(function (id) { $(id).classList.remove("on"); $(id).setAttribute("aria-pressed", "false"); });
     return feat;
   }
+  function props0(t) { return { dist: "a distance", area: "an area", prof: "a profile" }[t]; }
+  function liveText0() { return "Pick a tool, then tap points on the map."; }
   map.on("click", function (e) {
-    if (tool) { addPoint(e.latlng); return; }
-    if (openSheet !== "infoSheet") show("infoSheet");
+    if (tool) { addPoint(e.latlng); return; }    // measuring: map taps add points, panels stay as they are
+    if (openSheet !== "infoSheet") openSheetId("infoSheet", infoPrefMin);
     readout(e.latlng.lat, e.latlng.lng);
   });
 
@@ -378,12 +452,22 @@
   window.__sw = "unsupported";
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
     window.__sw = "registering";
-    navigator.serviceWorker.register("sw.js").then(function (r) { window.__sw = "registered"; return navigator.serviceWorker.ready; })
-      .then(function () { window.__sw = "ready"; }).catch(function (e) { window.__sw = "failed: " + e.message; });
+    var hadController = !!navigator.serviceWorker.controller, reloading = false;
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (r) {
+      window.__sw = "registered";
+      document.addEventListener("visibilitychange", function () { if (!document.hidden) r.update().catch(function () {}); });
+      return navigator.serviceWorker.ready;
+    }).then(function () { window.__sw = "ready"; }).catch(function (e) { window.__sw = "failed: " + e.message; });
+    // A new build took over (sw.js changed): reload once so the phone runs it, unless work would be lost.
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadController || reloading) { hadController = true; return; }
+      if (tool || pts.length || features.length) { hint("App updated. Export your measurements, then reload to use the new version."); return; }
+      reloading = true; location.reload();
+    });
   } else if (location.protocol === "file:") { window.__sw = "skipped (file://)"; }
 
   // test / automation hooks
   window.TerrainApp = { map: map, sampleElev: sampleElev, sampleSlope: sampleSlope, stateplane: stateplane, lengthM: lengthM, areaM2: areaM2,
     setTool: setTool, addPoint: addPoint, finish: finish, readout: readout, setZone: setZone, layers: LAYERS, setLayer: setLayer,
-    geojson: geojson, snapshot: snapshot, profile: profile, show: show, last: function () { return last; } };
+    geojson: geojson, snapshot: snapshot, profile: profile, show: show, closeSheet: closeSheet, setMin: setMin, openSheet: function () { return openSheet; }, tool: function () { return tool; }, last: function () { return last; } };
 })();
